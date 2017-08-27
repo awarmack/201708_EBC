@@ -1,4 +1,7 @@
-.Rproj.user
-.Rhistory
-.RData
-.Rprofile
+# RSTUDIO FILES #
+
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Rprofile
+.DS_Store
