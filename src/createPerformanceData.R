@@ -123,7 +123,7 @@ perf$TWA.range <- cut(perf$TWA.mir, breaks=seq(0,180, by=30))
 
 source("../polar_data/loadPolars.R")
 
-perf$target.SOG <- bilinear(x= trueangle, y= c(0, truewind), z=zv, x0=perf$TWA, y0=perf$TWS)$z
+perf$target.SOG <- bilinear(x= trueangle, y= c(0, truewind), z=zv, x0=perf$TWA.mir, y0=perf$TWS)$z
 perf$diff.SOG <- perf$SOG - perf$target.SOG
 perf$pol.perc <- (perf$SOG / perf$target.SOG) * 100
 
