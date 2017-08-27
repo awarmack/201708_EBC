@@ -249,7 +249,7 @@ dat <- arrange(dat, TIME.MS, desc(TIME.MS))
 
 #dat <- dat[dat$GGA.LAT < 43, ]
 
-dat$time <- as.POSIXct(dat$TIME.MS/1000, origin="1970-01-01", tz="UTC")
+#dat$time <- as.POSIXct(dat$TIME.MS/1000, origin="1970-01-01", tz="UTC")
 
 
 # Adjust Time & Date to GPS Time ====
@@ -284,10 +284,10 @@ dat$TIME.M <- as.POSIXct(round(dat$TIME.S, "mins"))
 dat$TIME.S <- as.POSIXct(round(dat$TIME.S, "secs"))
 
 
-write.csv(dat, "./data/all_data.csv", row.names=FALSE, na="")
+write.csv(dat, "./output/parsed_nmea_data.csv", row.names=FALSE, na="")
 
-save(file="./data/dat.RData", list = ls() )
+save(file="./output/parsed_nmea_data.RData", list = ls() )
 
-
+rm(list=ls())
 
 
