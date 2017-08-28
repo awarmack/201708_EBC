@@ -62,26 +62,6 @@ stopifnot(all(perf$COG > 0))
 
 
 #convert Apparent to True
-getTrueWind <- function(AWS, AWA, SOG) { 
-  #outputs a list with 
-  # $tws = True Wind Speed
-  # $twa = True Wind Angle
-  
-  #  B = AWA in radians
-  b <- AWA * (pi/180)
-  
-  #true wind speed
-  TWS <- sqrt(AWS^2 + SOG^2 - 2*AWS*SOG*cos(b))
-  
-  TWA <- atan((AWS*sin(b))/(AWS*cos(b)-SOG))
-
-  TWA <- (TWA * 180)/pi
-  
-  TWA <- ifelse(TWA < 0, TWA+180, TWA)
-
-  x <- list(TWS=TWS, TWA=TWA)
-  return(x)
-}
 
 tw <- getTrueWind(perf$AWS, perf$AWA, perf$SOG)
 perf$TWS <- tw$TWS

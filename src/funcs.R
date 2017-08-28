@@ -41,6 +41,46 @@ compCheckSum <- function(sentance){
   return(results) 
 }
 
+rad2deg <- function(rad){
+  
+  deg <- (rad * 180)/pi
+  return(deg)
+}
+
+deg2rad <- function(deg){
+  
+  rad <- deg * (pi/180)
+  return(rad)
+}
+
+getTrueWind <- function(AWS, AWA, SOG) { 
+  #outputs a list with 
+  # $tws = True Wind Speed
+  # $twa = True Wind Angle
+  
+  #  B = AWA in radians
+  b <- AWA * (pi/180)
+  
+  #true wind speed
+  TWS <- sqrt(AWS^2 + SOG^2 - 2*AWS*SOG*cos(b))
+  
+  x <- ifelse(AWS*cos(b)>SOG, 0, -pi)
+  
+  TWA <- atan((AWS*sin(b))/(AWS*cos(b)-SOG))
+  
+  TWA <- TWA+x
+  
+  TWA <- ifelse(TWA < 0, TWA + 2*pi, TWA)
+  
+  TWA <- (TWA * 180)/pi
+  
+  #TWA <- ifelse(TWA > 90 , 360-TWA, TWA)
+  
+  x <- list(TWS=TWS, TWA=TWA, x=x)
+  return(x)
+}
+
+
 parse.Coord <- function(coord){
   #takes a coordinate in the system xx xx.xxxx and converts it to xx.xxxxxx
 
