@@ -113,3 +113,10 @@ perf$target.SOG[perf$AWA < 36] <- NA
 perf$diff.SOG[perf$AWA < 36] <- NA
 perf$pol.perc[perf$AWA < 36] <- NA
 
+
+#anything over 120% is an apparition...set to NA
+perf$pol.perc[perf$pol.perc > 120] <- NA
+
+
+
+

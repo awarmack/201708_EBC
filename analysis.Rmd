@@ -3,6 +3,10 @@ title: "2017 Edison Boat Club Regatta"
 output: github_document
 ---
 
+Zubenelgenubi USA5333
+2017-08-17
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
 	echo = FALSE,
@@ -19,13 +23,13 @@ source("./src/createPerformanceData.R")
 
 
 #route
-```{r plot path, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
+```{r route, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
 library(ggmap)
 library(ggrepel)
 
 map_lims <- c(min(perf$LON), min(perf$LAT), max(perf$LON), max(perf$LAT)) 
 
-map <- get_map(location = map_lims, zoom=12)
+map <- get_map(location = map_lims, zoom=12, color="bw")
 
 #time labels
 time_labs <- seq(round(head(perf$TIME.5S, 1), units="mins"), round(tail(perf$TIME.5S, 1), units="hour"), by="10 mins")
@@ -45,9 +49,175 @@ ggmap(map) +
 
 
 #Wind Condition
+```{r wind_v_course, fig.height=12, fig.width=12}
+wind_pts <- seq(round(head(perf$TIME.5S, 1), units="hours"), tail(perf$TIME.5S, 1), by="5 min")
+
+wind_pts <- perf[perf$TIME.5S %in% wind_pts, ]
+
+
+ggmap(map) + 
+  geom_path(data=perf, aes(x=LON, y=LAT), linetype=2)+
+  geom_point(data=wind_pts, aes(x=LON, y=LAT, color=TWS))+
+  geom_spoke(data=wind_pts, aes(x=LON, 
+                                y=LAT, 
+                                angle=-deg2rad(AWD)+pi/2,
+                                color=TWS),
+                                radius=0.005, 
+                                arrow=arrow(ends = "first", length = unit(0.25, "lines")))+
+  geom_spoke(data=wind_pts, aes(x=LON, 
+                                y=LAT, 
+                                angle=-deg2rad(COG)+pi/2), 
+                                radius=0.005,
+                                arrow=arrow(length = unit(0.25, "lines")))+
+  #geom_text_repel(data=wind_pts, aes(x=LON, y=LAT, label=round(deg2rad(COG),1)))+
+  #scale_color_gradientn(colors=rainbow(5), breaks=seq(0,30, 5))+
+  scale_x_continuous(limits=c(min(perf$LON), max(perf$LON)))+
+  scale_y_continuous(limits=c(min(perf$LAT), max(perf$LAT)))+
+  scale_color_gradient(low="blue", high="red")+
+  ggtitle("Course[COG] vs.  Apparent Wind Angle[AWA]")
+
+
+
+```
+
+
+```{r , echo=FALSE, message=FALSE, warning=FALSE}
+
+pol_labels <- optpolars[optpolars$BTW==180, ]
+
+ggplot() + 
+  geom_path(data=optpolars, aes(x=BTW, y=V, group=VTW, color=VTW)) + 
+  #coord_polar("x") + 
+  scale_x_continuous(limits=c(0,180), breaks=seq(0,180, 15), name="True Wind Angle") + 
+  scale_y_continuous(name="SOG", limits=c(0,9))+
+  geom_vline(xintercept=0)+
+  geom_vline(xintercept=90)+
+  geom_vline(xintercept=180)+
+  geom_vline(xintercept=270)+
+  ggtitle("SOG by TWA")+
+  geom_point(data=perf, aes(x=TWA.mir, y=SOG, color=TWS), alpha=0.5)+
+  scale_color_gradientn(colors=rainbow(5), name= "SOG")+
+  geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=0)
 
 
 
 
-#Performance vs. Polars
+
+```
+
+```{r}
+ggplot() + 
+  geom_path(data=optpolars, aes(x=BTW, y=V, group=VTW)) + 
+  #coord_polar("x") + 
+  scale_x_continuous(limits=c(0,180), breaks=seq(0,180, 15), name="True Wind Angle") + 
+  scale_y_continuous(name="SOG", limits=c(0,9))+
+  geom_vline(xintercept=0)+
+  geom_vline(xintercept=90)+
+  geom_vline(xintercept=180)+
+  geom_vline(xintercept=270)+
+  ggtitle("% of Polar Performance by TWA")+
+  geom_point(data=perf, aes(x=TWA.mir, y=SOG, color=pol.perc), alpha=0.5)+
+  scale_color_gradientn(colors=rainbow(5), limits=c(0,120), breaks=seq(0,120, by=20), name= "% of Target")+
+  geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=0)
+
+```
+
+
+```{r}
+ggplot() + 
+  geom_path(data=optpolars, aes(x=BTW, y=V, group=VTW)) + 
+  coord_polar("x") + 
+  scale_x_continuous(limits=c(0,360), breaks=seq(0,360, 15), name="True Wind Angle") + 
+  scale_y_continuous(name="SOG", limits=c(0,9))+
+  geom_vline(xintercept=0)+
+  geom_vline(xintercept=90)+
+  geom_vline(xintercept=180)+
+  geom_vline(xintercept=270)+
+  ggtitle("% of Polar Performance by AWA")+
+  geom_point(data=perf, aes(x=TWA.mir, y=SOG, color=pol.perc), alpha=0.5)+
+  scale_color_gradientn(colors=rainbow(5), limits=c(0,120), breaks=seq(0,120, by=20), name= "% of Target")+
+  geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=1)
+
+
+```
+
+```{r location_of_perf, fig.height=10, fig.width=10}
+
+ggmap(map) + 
+  geom_point(data=perf, aes(x=LON, y=LAT, color=pol.perc))+
+  scale_color_gradientn(colors=rainbow(4))+
+  scale_x_continuous(limits=c(min(perf$LON), max(perf$LON)))+
+  scale_y_continuous(limits=c(min(perf$LAT), max(perf$LAT)))
+
+
+
+
+```
+
+```{r performance_over_time}
+
+ggplot(perf)+geom_point(aes(x=TIME.5S, y=SOG, color=pol.perc))+
+  scale_color_gradientn(colors=rainbow(4), name="% of Polar")+
+  scale_x_datetime(name="Time")+
+  ggtitle("Performance vs. Polar over Time")
+
+```
+
+Grey dots are areas where the target speed could not be calculated from the polar.  These are mostly areas where we were sailing above 33 degrees (ie. pinching up and sailing too high)
+
+
+##Distribution of Performance
+```{r}
+ggplot(perf, aes(x=pol.perc)) + 
+  geom_histogram(aes(y=..density..), bins=50, color="black")+
+  scale_x_continuous(name="% Performance to Polar")+
+  ggtitle("Overall Distribution of Performance vs. Polar")+
+  geom_density(color="red", fill="red", alpha=0.2)
+```
+
+
+
+
+
+```{r, fig.height=6, fig.width=10}
+library(modeest)
+
+
+getMode <- function(x){
+  
+  mode <- mlv(x, na.rm=TRUE, method="shorth")$M
+  
+  return(mode)
+  
+}
+
+
+perf.labs <- perf %>% group_by(AWS.range, AWA.range) %>% 
+  summarise(mean=mean(pol.perc, na.rm=TRUE), 
+            median=median(pol.perc, na.rm=TRUE),
+            mode=mlv(pol.perc, method="hsm", na.rm=TRUE)[["M"]],
+            sd = sd(pol.perc, na.rm=TRUE), 
+            max.sog = max(SOG), 
+            min.sog = min(SOG),
+            max.perf = max(pol.perc, na.rm=TRUE),
+            min.perf = min(pol.perc, na.rm=TRUE))
+
+
+ggplot(perf, aes(x=pol.perc)) + 
+  geom_histogram(aes(y=..density..), bins=50, color="black")+
+  facet_grid(AWS.range ~ AWA.range)+
+  geom_vline(xintercept=95, linetype=2)+
+  geom_vline(xintercept=100)+
+  geom_point(data=perf.labs, aes(x=mode, y=0), color="red")+
+  geom_label_repel(data=perf.labs, 
+                   aes(x=mode, y= .6, label=round(mode, 2), fill=mode))+
+  scale_fill_gradientn(colors=rainbow(5), name="% of Polar", breaks=c(70, 80, 90, 100, 110))+ggtitle("Distribution Performance at Each Wind Angle & Speed Range ")
+
+
+
+
+
+```
+
+
 
