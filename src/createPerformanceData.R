@@ -97,6 +97,8 @@ perf$TWS.range <- factor(perf$TWS.range, levels=rev(levels(perf$TWS.range)))
 perf$AWA.range <- cut(perf$AWA.mir, breaks=seq(0,180, by=30))
 perf$TWA.range <- cut(perf$TWA.mir, breaks=seq(0,180, by=30))
 
+perf <- perf[perf$AWA < 360, ]
+
 
 
 # 5. Calculate Performance Vs. Polar ============================================
@@ -107,5 +109,7 @@ perf$target.SOG <- bilinear(x= trueangle, y= c(0, truewind), z=zv, x0=perf$TWA.m
 perf$diff.SOG <- perf$SOG - perf$target.SOG
 perf$pol.perc <- (perf$SOG / perf$target.SOG) * 100
 
-
+perf$target.SOG[perf$AWA < 36] <- NA
+perf$diff.SOG[perf$AWA < 36] <- NA
+perf$pol.perc[perf$AWA < 36] <- NA
 
