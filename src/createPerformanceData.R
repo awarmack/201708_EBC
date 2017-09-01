@@ -7,15 +7,14 @@
 
 
 #### Library & Source ####
-rm(list=ls())
 
 library(dplyr)
 library(tidyr)
 library(akima)
 
-load("./output/parsed_nmea_data.RData")
+#load("./output/parsed_nmea_data.RData")
 
-source("./src/funcs.R")
+#source("./src/funcs.R")
 
 
 ## 1. Remove non-race data  ===================================================
@@ -32,7 +31,7 @@ race <- dat[dat$TIME.S > StartTime & dat$TIME.S < EndTime, ]
 race$TIME.5S <- as.POSIXct((round(race$TIME.MS/5000)*5000)/1000, origin="1970-01-01")
 
 
-write.csv(race, "./output/fullrace_byMS.csv")
+#write.csv(race, "./output/fullrace_byMS.csv")
 
 
 # 2. summarise Performance Data over 5 seconds =========================================
@@ -103,20 +102,38 @@ perf <- perf[perf$AWA < 360, ]
 
 # 5. Calculate Performance Vs. Polar ============================================
 
-source("../polar_data/loadPolars.R")
+#source("../src/loadPolars.R")
 
 perf$target.SOG <- bilinear(x= trueangle, y= c(0, truewind), z=zv, x0=perf$TWA.mir, y0=perf$TWS)$z
 perf$diff.SOG <- perf$SOG - perf$target.SOG
+
 perf$pol.perc <- (perf$SOG / perf$target.SOG) * 100
 
-perf$target.SOG[perf$AWA < 36] <- NA
-perf$diff.SOG[perf$AWA < 36] <- NA
-perf$pol.perc[perf$AWA < 36] <- NA
+x <- is.na(perf$pol.perc)
+
+print(sum(x))
+
+if(sum(x)>0){
+  
+ perf$pol.perc[x]  <- (perf$SOG[x] / naperf$target.SOG[x]) * 100
+  
+  
+}
+
+# perf$target.SOG[perf$AWA < 36] <- NA
+# perf$diff.SOG[perf$AWA < 36] <- NA
+# perf$pol.perc[perf$AWA < 36] <- NA
 
 
 #anything over 120% is an apparition...set to NA
-perf$pol.perc[perf$pol.perc > 120] <- NA
+perf$pol.perc[perf$pol.perc > 300] <- NA
 
+#find the tacks of the race
 
+COGdis <- dist(perf$COG, method="euclidean")
+COGclust <- hclust(COGdis, method="ward.D")
+legs <- cutree(COGclust, h=10000)
+
+perf$legs <- legs
 
 

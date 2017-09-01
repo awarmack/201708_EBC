@@ -5,3 +5,4 @@
 *.RData
 *.Rprofile
 .DS_Store
+.Rproj.user

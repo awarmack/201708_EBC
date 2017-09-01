@@ -8,24 +8,43 @@ Zubenelgenubi USA5333
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-	echo = FALSE,
-	message = FALSE,
-	warning = FALSE,
-	cache = TRUE
-)
+rm(list=ls())
+
+knitr::opts_chunk$set(cache = TRUE, echo = FALSE)
 knitr::opts_chunk$set(cache= TRUE)
-getwd()
-list.files("./src")
-source("./src/createPerformanceData.R")
+
+
 
 ```
+
+
+```{r Load_Data, echo=TRUE, message=FALSE, warning=FALSE, cache=TRUE}
+
+load("./output/parsed_nmea_data.RData")
+
+source("./src/funcs.R")
+
+source("./src/loadPolars.R")
+
+source("./src/createPerformanceData.R")
+
+perf$pol.perc <- (perf$SOG / perf$target.SOG) * 100
+
+
+x <- is.na(perf$pol.perc)
+
+sum(x)
+
+```
+
+
 
 
 #route
 ```{r route, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE}
 library(ggmap)
 library(ggrepel)
+library(ggplot2)
 
 map_lims <- c(min(perf$LON), min(perf$LAT), max(perf$LON), max(perf$LAT)) 
 
@@ -106,6 +125,24 @@ ggplot() +
 ```
 
 ```{r}
+
+ggplot()+
+  geom_point(data=perf, aes(x=target.SOG, y=SOG, color=pol.perc))+
+  scale_color_gradientn(colors=rainbow(8), limits=c(40,180), breaks=seq(40,180, by=20), name= "% of Target")+
+  geom_abline(aes(intercept=0, slope=1))
+
+```
+
+```{r}
+
+ggplot()+
+  geom_point(data=perf, aes(x=target.SOG, y=SOG, color=TWA.range))+
+  #scale_color_gradientn(colors=rainbow(8), limits=c(40,180), breaks=seq(40,180, by=20), name= "% of Target")+
+  geom_abline(aes(intercept=0, slope=1))
+
+```
+
+```{r}
 ggplot() + 
   geom_path(data=optpolars, aes(x=BTW, y=V, group=VTW)) + 
   #coord_polar("x") + 
@@ -117,7 +154,7 @@ ggplot() +
   geom_vline(xintercept=270)+
   ggtitle("% of Polar Performance by TWA")+
   geom_point(data=perf, aes(x=TWA.mir, y=SOG, color=pol.perc), alpha=0.5)+
-  scale_color_gradientn(colors=rainbow(5), limits=c(0,120), breaks=seq(0,120, by=20), name= "% of Target")+
+  scale_color_gradientn(colors=rainbow(8), limits=c(40,180), breaks=seq(40,180, by=20), name= "% of Target")+
   geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=0)
 
 ```
@@ -133,13 +170,32 @@ ggplot() +
   geom_vline(xintercept=90)+
   geom_vline(xintercept=180)+
   geom_vline(xintercept=270)+
-  ggtitle("% of Polar Performance by AWA")+
+  ggtitle("% of Polar Performance by TWA")+
   geom_point(data=perf, aes(x=TWA.mir, y=SOG, color=pol.perc), alpha=0.5)+
-  scale_color_gradientn(colors=rainbow(5), limits=c(0,120), breaks=seq(0,120, by=20), name= "% of Target")+
+  scale_color_gradientn(colors=rainbow(8), limits=c(40,180), breaks=seq(40,180, by=20), name= "% of Target")+
   geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=1)
 
 
 ```
+
+```{r, message=FALSE, warning=FALSE}
+ggplot() + 
+  geom_path(data=optpolars, aes(x=BTW, y=V, group=VTW)) + 
+  coord_polar("x") + 
+  scale_x_continuous(limits=c(0,360), breaks=seq(0,360, 15), name="True Wind Angle") + 
+  scale_y_continuous(name="SOG", limits=c(0,9))+
+  geom_vline(xintercept=0)+
+  geom_vline(xintercept=90)+
+  geom_vline(xintercept=180)+
+  geom_vline(xintercept=270)+
+  ggtitle("% of Polar Performance by AWA")+
+  geom_point(data=perf, aes(x=AWA.mir, y=SOG, color=pol.perc), alpha=0.5)+
+  scale_color_gradientn(colors=rainbow(8), limits=c(40,180), breaks=seq(40,180, by=20), name= "% of Target")+
+  geom_text(data=pol_labels, aes(x=BTW, y=V, label=VTW), hjust=1)
+
+
+```
+
 
 ```{r location_of_perf, fig.height=10, fig.width=10}
 
@@ -165,6 +221,18 @@ ggplot(perf)+geom_point(aes(x=TIME.5S, y=SOG, color=pol.perc))+
 
 Grey dots are areas where the target speed could not be calculated from the polar.  These are mostly areas where we were sailing above 33 degrees (ie. pinching up and sailing too high)
 
+#By Leg of the race
+```{r}
+
+ggmap(map)+geom_point(data=perf, aes(x=LON, y=LAT, color=as.factor(legs)))
+
+ggplot(perf)+geom_point(aes(x=TIME.5S, y=SOG, color=as.factor(legs)))+
+  scale_color_discrete(name="leg")
+
+```
+
+
+
 
 ##Distribution of Performance
 ```{r}
@@ -173,6 +241,13 @@ ggplot(perf, aes(x=pol.perc)) +
   scale_x_continuous(name="% Performance to Polar")+
   ggtitle("Overall Distribution of Performance vs. Polar")+
   geom_density(color="red", fill="red", alpha=0.2)
+
+
+ggplot(perf, aes(x=pol.perc)) + 
+  #geom_histogram(aes(y=..density..), bins=50, color="black")+
+  scale_x_continuous(name="% Performance to Polar")+
+  ggtitle("Overall Distribution of Performance vs. Polar")+
+  geom_density(aes(color=as.factor(legs)), alpha=0.2)
 ```
 
 
